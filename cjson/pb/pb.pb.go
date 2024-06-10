@@ -20,16 +20,70 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Template struct {
+type RawFieldType int32
+
+const (
+	RawFieldType_STRING RawFieldType = 0
+	RawFieldType_NUMBER RawFieldType = 1
+	RawFieldType_BOOL   RawFieldType = 2
+)
+
+// Enum value maps for RawFieldType.
+var (
+	RawFieldType_name = map[int32]string{
+		0: "STRING",
+		1: "NUMBER",
+		2: "BOOL",
+	}
+	RawFieldType_value = map[string]int32{
+		"STRING": 0,
+		"NUMBER": 1,
+		"BOOL":   2,
+	}
+)
+
+func (x RawFieldType) Enum() *RawFieldType {
+	p := new(RawFieldType)
+	*p = x
+	return p
+}
+
+func (x RawFieldType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RawFieldType) Descriptor() protoreflect.EnumDescriptor {
+	return file_cjson_pb_proto_enumTypes[0].Descriptor()
+}
+
+func (RawFieldType) Type() protoreflect.EnumType {
+	return &file_cjson_pb_proto_enumTypes[0]
+}
+
+func (x RawFieldType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RawFieldType.Descriptor instead.
+func (RawFieldType) EnumDescriptor() ([]byte, []int) {
+	return file_cjson_pb_proto_rawDescGZIP(), []int{0}
+}
+
+type Field struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Values []string `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// Types that are assignable to Field:
+	//
+	//	*Field_Raw
+	//	*Field_Obj
+	//	*Field_Arr
+	Field isField_Field `protobuf_oneof:"field"`
 }
 
-func (x *Template) Reset() {
-	*x = Template{}
+func (x *Field) Reset() {
+	*x = Field{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cjson_pb_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -37,13 +91,13 @@ func (x *Template) Reset() {
 	}
 }
 
-func (x *Template) String() string {
+func (x *Field) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Template) ProtoMessage() {}
+func (*Field) ProtoMessage() {}
 
-func (x *Template) ProtoReflect() protoreflect.Message {
+func (x *Field) ProtoReflect() protoreflect.Message {
 	mi := &file_cjson_pb_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -55,34 +109,71 @@ func (x *Template) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Template.ProtoReflect.Descriptor instead.
-func (*Template) Descriptor() ([]byte, []int) {
+// Deprecated: Use Field.ProtoReflect.Descriptor instead.
+func (*Field) Descriptor() ([]byte, []int) {
 	return file_cjson_pb_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Template) GetValues() []string {
-	if x != nil {
-		return x.Values
+func (m *Field) GetField() isField_Field {
+	if m != nil {
+		return m.Field
 	}
 	return nil
 }
 
-type RawValue struct {
+func (x *Field) GetRaw() RawFieldType {
+	if x, ok := x.GetField().(*Field_Raw); ok {
+		return x.Raw
+	}
+	return RawFieldType_STRING
+}
+
+func (x *Field) GetObj() *ObjectField {
+	if x, ok := x.GetField().(*Field_Obj); ok {
+		return x.Obj
+	}
+	return nil
+}
+
+func (x *Field) GetArr() *ArraryField {
+	if x, ok := x.GetField().(*Field_Arr); ok {
+		return x.Arr
+	}
+	return nil
+}
+
+type isField_Field interface {
+	isField_Field()
+}
+
+type Field_Raw struct {
+	Raw RawFieldType `protobuf:"varint,1,opt,name=raw,proto3,enum=RawFieldType,oneof"`
+}
+
+type Field_Obj struct {
+	Obj *ObjectField `protobuf:"bytes,2,opt,name=obj,proto3,oneof"`
+}
+
+type Field_Arr struct {
+	Arr *ArraryField `protobuf:"bytes,3,opt,name=arr,proto3,oneof"`
+}
+
+func (*Field_Raw) isField_Field() {}
+
+func (*Field_Obj) isField_Field() {}
+
+func (*Field_Arr) isField_Field() {}
+
+type RawField struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Types that are assignable to TestOneof:
-	//
-	//	*RawValue_Str
-	//	*RawValue_Bool
-	//	*RawValue_NumberDouble
-	//	*RawValue_NumberInt32
-	TestOneof isRawValue_TestOneof `protobuf_oneof:"test_oneof"`
+	Type RawFieldType `protobuf:"varint,1,opt,name=type,proto3,enum=RawFieldType" json:"type,omitempty"`
 }
 
-func (x *RawValue) Reset() {
-	*x = RawValue{}
+func (x *RawField) Reset() {
+	*x = RawField{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cjson_pb_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -90,13 +181,13 @@ func (x *RawValue) Reset() {
 	}
 }
 
-func (x *RawValue) String() string {
+func (x *RawField) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RawValue) ProtoMessage() {}
+func (*RawField) ProtoMessage() {}
 
-func (x *RawValue) ProtoReflect() protoreflect.Message {
+func (x *RawField) ProtoReflect() protoreflect.Message {
 	mi := &file_cjson_pb_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -108,87 +199,29 @@ func (x *RawValue) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RawValue.ProtoReflect.Descriptor instead.
-func (*RawValue) Descriptor() ([]byte, []int) {
+// Deprecated: Use RawField.ProtoReflect.Descriptor instead.
+func (*RawField) Descriptor() ([]byte, []int) {
 	return file_cjson_pb_proto_rawDescGZIP(), []int{1}
 }
 
-func (m *RawValue) GetTestOneof() isRawValue_TestOneof {
-	if m != nil {
-		return m.TestOneof
+func (x *RawField) GetType() RawFieldType {
+	if x != nil {
+		return x.Type
 	}
-	return nil
+	return RawFieldType_STRING
 }
 
-func (x *RawValue) GetStr() string {
-	if x, ok := x.GetTestOneof().(*RawValue_Str); ok {
-		return x.Str
-	}
-	return ""
-}
-
-func (x *RawValue) GetBool() bool {
-	if x, ok := x.GetTestOneof().(*RawValue_Bool); ok {
-		return x.Bool
-	}
-	return false
-}
-
-func (x *RawValue) GetNumberDouble() float64 {
-	if x, ok := x.GetTestOneof().(*RawValue_NumberDouble); ok {
-		return x.NumberDouble
-	}
-	return 0
-}
-
-func (x *RawValue) GetNumberInt32() int32 {
-	if x, ok := x.GetTestOneof().(*RawValue_NumberInt32); ok {
-		return x.NumberInt32
-	}
-	return 0
-}
-
-type isRawValue_TestOneof interface {
-	isRawValue_TestOneof()
-}
-
-type RawValue_Str struct {
-	Str string `protobuf:"bytes,1,opt,name=str,proto3,oneof"`
-}
-
-type RawValue_Bool struct {
-	Bool bool `protobuf:"varint,2,opt,name=bool,proto3,oneof"`
-}
-
-type RawValue_NumberDouble struct {
-	NumberDouble float64 `protobuf:"fixed64,3,opt,name=number_double,json=numberDouble,proto3,oneof"`
-}
-
-type RawValue_NumberInt32 struct {
-	NumberInt32 int32 `protobuf:"varint,4,opt,name=number_int32,json=numberInt32,proto3,oneof"`
-}
-
-func (*RawValue_Str) isRawValue_TestOneof() {}
-
-func (*RawValue_Bool) isRawValue_TestOneof() {}
-
-func (*RawValue_NumberDouble) isRawValue_TestOneof() {}
-
-func (*RawValue_NumberInt32) isRawValue_TestOneof() {}
-
-type Item struct {
+type ObjectField struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	IsArr        bool      `protobuf:"varint,1,opt,name=isArr,proto3" json:"isArr,omitempty"`
-	TemplateHash []byte    `protobuf:"bytes,2,opt,name=templateHash,proto3" json:"templateHash,omitempty"`
-	Items        []*Item   `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
-	RawValue     *RawValue `protobuf:"bytes,4,opt,name=rawValue,proto3" json:"rawValue,omitempty"`
+	Keys   []string `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
+	Fields []*Field `protobuf:"bytes,2,rep,name=fields,proto3" json:"fields,omitempty"`
 }
 
-func (x *Item) Reset() {
-	*x = Item{}
+func (x *ObjectField) Reset() {
+	*x = ObjectField{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cjson_pb_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -196,13 +229,13 @@ func (x *Item) Reset() {
 	}
 }
 
-func (x *Item) String() string {
+func (x *ObjectField) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Item) ProtoMessage() {}
+func (*ObjectField) ProtoMessage() {}
 
-func (x *Item) ProtoReflect() protoreflect.Message {
+func (x *ObjectField) ProtoReflect() protoreflect.Message {
 	mi := &file_cjson_pb_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -214,64 +247,259 @@ func (x *Item) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Item.ProtoReflect.Descriptor instead.
-func (*Item) Descriptor() ([]byte, []int) {
+// Deprecated: Use ObjectField.ProtoReflect.Descriptor instead.
+func (*ObjectField) Descriptor() ([]byte, []int) {
 	return file_cjson_pb_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *Item) GetIsArr() bool {
+func (x *ObjectField) GetKeys() []string {
 	if x != nil {
-		return x.IsArr
-	}
-	return false
-}
-
-func (x *Item) GetTemplateHash() []byte {
-	if x != nil {
-		return x.TemplateHash
+		return x.Keys
 	}
 	return nil
 }
 
-func (x *Item) GetItems() []*Item {
+func (x *ObjectField) GetFields() []*Field {
+	if x != nil {
+		return x.Fields
+	}
+	return nil
+}
+
+type ArraryField struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Items []*Field `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+}
+
+func (x *ArraryField) Reset() {
+	*x = ArraryField{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cjson_pb_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ArraryField) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArraryField) ProtoMessage() {}
+
+func (x *ArraryField) ProtoReflect() protoreflect.Message {
+	mi := &file_cjson_pb_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArraryField.ProtoReflect.Descriptor instead.
+func (*ArraryField) Descriptor() ([]byte, []int) {
+	return file_cjson_pb_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ArraryField) GetItems() []*Field {
 	if x != nil {
 		return x.Items
 	}
 	return nil
 }
 
-func (x *Item) GetRawValue() *RawValue {
+type Payload struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SchemaHash []byte   `protobuf:"bytes,1,opt,name=schemaHash,proto3" json:"schemaHash,omitempty"`
+	Values     []*Value `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
+}
+
+func (x *Payload) Reset() {
+	*x = Payload{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cjson_pb_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Payload) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Payload) ProtoMessage() {}
+
+func (x *Payload) ProtoReflect() protoreflect.Message {
+	mi := &file_cjson_pb_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Payload.ProtoReflect.Descriptor instead.
+func (*Payload) Descriptor() ([]byte, []int) {
+	return file_cjson_pb_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Payload) GetSchemaHash() []byte {
 	if x != nil {
-		return x.RawValue
+		return x.SchemaHash
 	}
 	return nil
 }
+
+func (x *Payload) GetValues() []*Value {
+	if x != nil {
+		return x.Values
+	}
+	return nil
+}
+
+type Value struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Value:
+	//
+	//	*Value_Str
+	//	*Value_Bool
+	//	*Value_NumberDouble
+	Value isValue_Value `protobuf_oneof:"value"`
+}
+
+func (x *Value) Reset() {
+	*x = Value{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cjson_pb_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Value) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Value) ProtoMessage() {}
+
+func (x *Value) ProtoReflect() protoreflect.Message {
+	mi := &file_cjson_pb_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Value.ProtoReflect.Descriptor instead.
+func (*Value) Descriptor() ([]byte, []int) {
+	return file_cjson_pb_proto_rawDescGZIP(), []int{5}
+}
+
+func (m *Value) GetValue() isValue_Value {
+	if m != nil {
+		return m.Value
+	}
+	return nil
+}
+
+func (x *Value) GetStr() string {
+	if x, ok := x.GetValue().(*Value_Str); ok {
+		return x.Str
+	}
+	return ""
+}
+
+func (x *Value) GetBool() bool {
+	if x, ok := x.GetValue().(*Value_Bool); ok {
+		return x.Bool
+	}
+	return false
+}
+
+func (x *Value) GetNumberDouble() float64 {
+	if x, ok := x.GetValue().(*Value_NumberDouble); ok {
+		return x.NumberDouble
+	}
+	return 0
+}
+
+type isValue_Value interface {
+	isValue_Value()
+}
+
+type Value_Str struct {
+	Str string `protobuf:"bytes,1,opt,name=str,proto3,oneof"`
+}
+
+type Value_Bool struct {
+	Bool bool `protobuf:"varint,2,opt,name=bool,proto3,oneof"`
+}
+
+type Value_NumberDouble struct {
+	NumberDouble float64 `protobuf:"fixed64,3,opt,name=number_double,json=numberDouble,proto3,oneof"`
+}
+
+func (*Value_Str) isValue_Value() {}
+
+func (*Value_Bool) isValue_Value() {}
+
+func (*Value_NumberDouble) isValue_Value() {}
 
 var File_cjson_pb_proto protoreflect.FileDescriptor
 
 var file_cjson_pb_proto_rawDesc = []byte{
 	0x0a, 0x0e, 0x63, 0x6a, 0x73, 0x6f, 0x6e, 0x2f, 0x70, 0x62, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x22, 0x22, 0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x16, 0x0a, 0x06,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x06, 0x76, 0x61,
-	0x6c, 0x75, 0x65, 0x73, 0x22, 0x8e, 0x01, 0x0a, 0x08, 0x52, 0x61, 0x77, 0x56, 0x61, 0x6c, 0x75,
-	0x65, 0x12, 0x12, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00,
-	0x52, 0x03, 0x73, 0x74, 0x72, 0x12, 0x14, 0x0a, 0x04, 0x62, 0x6f, 0x6f, 0x6c, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x08, 0x48, 0x00, 0x52, 0x04, 0x62, 0x6f, 0x6f, 0x6c, 0x12, 0x25, 0x0a, 0x0d, 0x6e,
-	0x75, 0x6d, 0x62, 0x65, 0x72, 0x5f, 0x64, 0x6f, 0x75, 0x62, 0x6c, 0x65, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x01, 0x48, 0x00, 0x52, 0x0c, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x44, 0x6f, 0x75, 0x62,
-	0x6c, 0x65, 0x12, 0x23, 0x0a, 0x0c, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x5f, 0x69, 0x6e, 0x74,
-	0x33, 0x32, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x48, 0x00, 0x52, 0x0b, 0x6e, 0x75, 0x6d, 0x62,
-	0x65, 0x72, 0x49, 0x6e, 0x74, 0x33, 0x32, 0x42, 0x0c, 0x0a, 0x0a, 0x74, 0x65, 0x73, 0x74, 0x5f,
-	0x6f, 0x6e, 0x65, 0x6f, 0x66, 0x22, 0x84, 0x01, 0x0a, 0x04, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x14,
-	0x0a, 0x05, 0x69, 0x73, 0x41, 0x72, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05, 0x69,
-	0x73, 0x41, 0x72, 0x72, 0x12, 0x22, 0x0a, 0x0c, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65,
-	0x48, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0c, 0x74, 0x65, 0x6d, 0x70,
-	0x6c, 0x61, 0x74, 0x65, 0x48, 0x61, 0x73, 0x68, 0x12, 0x1b, 0x0a, 0x05, 0x69, 0x74, 0x65, 0x6d,
-	0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x49, 0x74, 0x65, 0x6d, 0x52, 0x05,
-	0x69, 0x74, 0x65, 0x6d, 0x73, 0x12, 0x25, 0x0a, 0x08, 0x72, 0x61, 0x77, 0x56, 0x61, 0x6c, 0x75,
-	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x09, 0x2e, 0x52, 0x61, 0x77, 0x56, 0x61, 0x6c,
-	0x75, 0x65, 0x52, 0x08, 0x72, 0x61, 0x77, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x42, 0x05, 0x5a, 0x03,
-	0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x77, 0x0a, 0x05, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x12, 0x21, 0x0a, 0x03, 0x72, 0x61, 0x77,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0d, 0x2e, 0x52, 0x61, 0x77, 0x46, 0x69, 0x65, 0x6c,
+	0x64, 0x54, 0x79, 0x70, 0x65, 0x48, 0x00, 0x52, 0x03, 0x72, 0x61, 0x77, 0x12, 0x20, 0x0a, 0x03,
+	0x6f, 0x62, 0x6a, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x4f, 0x62, 0x6a, 0x65,
+	0x63, 0x74, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x48, 0x00, 0x52, 0x03, 0x6f, 0x62, 0x6a, 0x12, 0x20,
+	0x0a, 0x03, 0x61, 0x72, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x41, 0x72,
+	0x72, 0x61, 0x72, 0x79, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x48, 0x00, 0x52, 0x03, 0x61, 0x72, 0x72,
+	0x42, 0x07, 0x0a, 0x05, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x22, 0x2d, 0x0a, 0x08, 0x52, 0x61, 0x77,
+	0x46, 0x69, 0x65, 0x6c, 0x64, 0x12, 0x21, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0e, 0x32, 0x0d, 0x2e, 0x52, 0x61, 0x77, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x54, 0x79,
+	0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x22, 0x41, 0x0a, 0x0b, 0x4f, 0x62, 0x6a, 0x65,
+	0x63, 0x74, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6b, 0x65, 0x79, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x6b, 0x65, 0x79, 0x73, 0x12, 0x1e, 0x0a, 0x06, 0x66,
+	0x69, 0x65, 0x6c, 0x64, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x06, 0x2e, 0x46, 0x69,
+	0x65, 0x6c, 0x64, 0x52, 0x06, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x22, 0x2b, 0x0a, 0x0b, 0x41,
+	0x72, 0x72, 0x61, 0x72, 0x79, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x12, 0x1c, 0x0a, 0x05, 0x69, 0x74,
+	0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x06, 0x2e, 0x46, 0x69, 0x65, 0x6c,
+	0x64, 0x52, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x22, 0x49, 0x0a, 0x07, 0x50, 0x61, 0x79, 0x6c,
+	0x6f, 0x61, 0x64, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x48, 0x61, 0x73,
+	0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0a, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x48,
+	0x61, 0x73, 0x68, 0x12, 0x1e, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x02, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x06, 0x2e, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c,
+	0x75, 0x65, 0x73, 0x22, 0x61, 0x0a, 0x05, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x12, 0x0a, 0x03,
+	0x73, 0x74, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x03, 0x73, 0x74, 0x72,
+	0x12, 0x14, 0x0a, 0x04, 0x62, 0x6f, 0x6f, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x48, 0x00,
+	0x52, 0x04, 0x62, 0x6f, 0x6f, 0x6c, 0x12, 0x25, 0x0a, 0x0d, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72,
+	0x5f, 0x64, 0x6f, 0x75, 0x62, 0x6c, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x01, 0x48, 0x00, 0x52,
+	0x0c, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x44, 0x6f, 0x75, 0x62, 0x6c, 0x65, 0x42, 0x07, 0x0a,
+	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x2a, 0x30, 0x0a, 0x0c, 0x52, 0x61, 0x77, 0x46, 0x69, 0x65,
+	0x6c, 0x64, 0x54, 0x79, 0x70, 0x65, 0x12, 0x0a, 0x0a, 0x06, 0x53, 0x54, 0x52, 0x49, 0x4e, 0x47,
+	0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x4e, 0x55, 0x4d, 0x42, 0x45, 0x52, 0x10, 0x01, 0x12, 0x08,
+	0x0a, 0x04, 0x42, 0x4f, 0x4f, 0x4c, 0x10, 0x02, 0x42, 0x05, 0x5a, 0x03, 0x2f, 0x70, 0x62, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -286,20 +514,30 @@ func file_cjson_pb_proto_rawDescGZIP() []byte {
 	return file_cjson_pb_proto_rawDescData
 }
 
-var file_cjson_pb_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_cjson_pb_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_cjson_pb_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_cjson_pb_proto_goTypes = []interface{}{
-	(*Template)(nil), // 0: Template
-	(*RawValue)(nil), // 1: RawValue
-	(*Item)(nil),     // 2: Item
+	(RawFieldType)(0),   // 0: RawFieldType
+	(*Field)(nil),       // 1: Field
+	(*RawField)(nil),    // 2: RawField
+	(*ObjectField)(nil), // 3: ObjectField
+	(*ArraryField)(nil), // 4: ArraryField
+	(*Payload)(nil),     // 5: Payload
+	(*Value)(nil),       // 6: Value
 }
 var file_cjson_pb_proto_depIdxs = []int32{
-	2, // 0: Item.items:type_name -> Item
-	1, // 1: Item.rawValue:type_name -> RawValue
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0, // 0: Field.raw:type_name -> RawFieldType
+	3, // 1: Field.obj:type_name -> ObjectField
+	4, // 2: Field.arr:type_name -> ArraryField
+	0, // 3: RawField.type:type_name -> RawFieldType
+	1, // 4: ObjectField.fields:type_name -> Field
+	1, // 5: ArraryField.items:type_name -> Field
+	6, // 6: Payload.values:type_name -> Value
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_cjson_pb_proto_init() }
@@ -309,7 +547,7 @@ func file_cjson_pb_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_cjson_pb_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Template); i {
+			switch v := v.(*Field); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -321,7 +559,7 @@ func file_cjson_pb_proto_init() {
 			}
 		}
 		file_cjson_pb_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RawValue); i {
+			switch v := v.(*RawField); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -333,7 +571,43 @@ func file_cjson_pb_proto_init() {
 			}
 		}
 		file_cjson_pb_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Item); i {
+			switch v := v.(*ObjectField); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cjson_pb_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ArraryField); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cjson_pb_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Payload); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cjson_pb_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Value); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -345,24 +619,29 @@ func file_cjson_pb_proto_init() {
 			}
 		}
 	}
-	file_cjson_pb_proto_msgTypes[1].OneofWrappers = []interface{}{
-		(*RawValue_Str)(nil),
-		(*RawValue_Bool)(nil),
-		(*RawValue_NumberDouble)(nil),
-		(*RawValue_NumberInt32)(nil),
+	file_cjson_pb_proto_msgTypes[0].OneofWrappers = []interface{}{
+		(*Field_Raw)(nil),
+		(*Field_Obj)(nil),
+		(*Field_Arr)(nil),
+	}
+	file_cjson_pb_proto_msgTypes[5].OneofWrappers = []interface{}{
+		(*Value_Str)(nil),
+		(*Value_Bool)(nil),
+		(*Value_NumberDouble)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cjson_pb_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   3,
+			NumEnums:      1,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_cjson_pb_proto_goTypes,
 		DependencyIndexes: file_cjson_pb_proto_depIdxs,
+		EnumInfos:         file_cjson_pb_proto_enumTypes,
 		MessageInfos:      file_cjson_pb_proto_msgTypes,
 	}.Build()
 	File_cjson_pb_proto = out.File

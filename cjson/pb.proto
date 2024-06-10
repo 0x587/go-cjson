@@ -1,23 +1,42 @@
 syntax = "proto3";
 option go_package = "/pb";
 
-message Template {
-  repeated string values = 1;
-}
-
-
-message RawValue {
-  oneof test_oneof {
-    string str = 1;
-    bool bool = 2;
-    double number_double = 3;
-    int32 number_int32 = 4;
+message Field {
+  oneof field {
+    RawFieldType raw = 1;
+    ObjectField obj = 2;
+    ArraryField arr = 3;
   }
 }
 
-message Item {
-  bool isArr = 1;
-  bytes templateHash = 2;
-  repeated Item items = 3;
-  RawValue rawValue = 4;
+enum RawFieldType {
+  STRING = 0;
+  NUMBER = 1;
+  BOOL = 2;
+}
+
+message RawField {
+  RawFieldType type = 1;
+}
+
+message ObjectField {
+  repeated string keys = 1;
+  repeated Field fields = 2;
+}
+
+message ArraryField {
+  repeated Field items = 1;
+}
+
+message Payload {
+  bytes schemaHash = 1;
+  repeated Value values = 2;
+}
+
+message Value {
+  oneof value {
+    string str = 1;
+    bool bool = 2;
+    double number_double = 3;
+  }
 }

@@ -5,9 +5,11 @@ import (
 	"errors"
 )
 
+type ID []byte
+
 type StorageIF interface {
-	Set(value []byte) ([]byte, error)
-	Get(hash []byte) ([]byte, error)
+	Set(value []byte) (ID, error)
+	Get(id ID) ([]byte, error)
 }
 
 type memImpl struct {
@@ -20,18 +22,16 @@ func NewMem() StorageIF {
 	}
 }
 
-func (i *memImpl) Set(value []byte) ([]byte, error) {
+func (i *memImpl) Set(value []byte) (ID, error) {
 	hasher := md5.New()
 	hasher.Write(value)
 	hash := hasher.Sum(nil)
-	// TODO: 缩短ID
-	hash = []byte{hash[0], hash[1]}
 	i.table[string(hash)] = value
 	return hash, nil
 }
 
-func (i *memImpl) Get(hash []byte) ([]byte, error) {
-	v, ok := i.table[string(hash)]
+func (i *memImpl) Get(id ID) ([]byte, error) {
+	v, ok := i.table[string(id)]
 	if !ok {
 		return nil, errors.New("not found")
 	}

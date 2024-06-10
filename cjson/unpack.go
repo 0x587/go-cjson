@@ -10,29 +10,40 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (i *impl) UnmarshalGzip(value []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(value)
+func (i *impl) UnmarshalGzip(fieldBuf []byte, payloadBuf []byte) ([]byte, error) {
+	fieldBuf, err := i.ungzip(fieldBuf)
+	if err != nil {
+		return nil, err
+	}
+	payloadBuf, err = i.ungzip(payloadBuf)
+	if err != nil {
+		return nil, err
+	}
+	return i.Unmarshal(fieldBuf, payloadBuf)
+}
+
+func (i *impl) ungzip(v []byte) ([]byte, error) {
+	buf := bytes.NewBuffer(v)
 	zr, err := gzip.NewReader(buf)
 	if err != nil {
 		return nil, err
 	}
-	bs, err := io.ReadAll(zr)
-	if err != nil {
-		return nil, err
-	}
-	return i.Unmarshal(bs)
+	return io.ReadAll(zr)
 }
 
-func (i *impl) Unmarshal(value []byte) ([]byte, error) {
-	item := &pb.Item{}
-	if err := proto.Unmarshal(value, item); err != nil {
+func (i *impl) Unmarshal(fieldBuf []byte, payloadBuf []byte) ([]byte, error) {
+	field, payload := &pb.Field{}, &pb.Payload{}
+	if err := proto.Unmarshal(fieldBuf, field); err != nil {
 		return nil, err
 	}
-	return i.Unpack(item)
+	if err := proto.Unmarshal(payloadBuf, payload); err != nil {
+		return nil, err
+	}
+	return i.Unpack(field, payload)
 }
 
-func (i *impl) Unpack(r *pb.Item) ([]byte, error) {
-	data, err := i.unpack(r)
+func (i *impl) Unpack(fields *pb.Field, payload *pb.Payload) ([]byte, error) {
+	data, _, err := i.unpack(fields, payload.GetValues())
 	if err != nil {
 		return nil, err
 	}
@@ -40,55 +51,56 @@ func (i *impl) Unpack(r *pb.Item) ([]byte, error) {
 	return res, err
 }
 
-func (i *impl) unpack(item *pb.Item) (any, error) {
-	if len(item.TemplateHash) == 0 && !item.IsArr {
-		switch item.RawValue.GetTestOneof().(type) {
-		case *pb.RawValue_Str:
-			return item.RawValue.GetStr(), nil
-		case *pb.RawValue_NumberDouble:
-			return item.RawValue.GetNumberDouble(), nil
-		case *pb.RawValue_NumberInt32:
-			return item.RawValue.GetNumberInt32(), nil
-		case *pb.RawValue_Bool:
-			return item.RawValue.GetBool(), nil
+func (i *impl) unpack(field *pb.Field, values []*pb.Value) (any, []*pb.Value, error) {
+	if field.GetField() == nil {
+		return nil, values, nil
+	}
+	switch field := field.GetField().(type) {
+	case *pb.Field_Raw:
+		switch field.Raw {
+		case pb.RawFieldType_STRING:
+			return values[0].GetStr(), values[1:], nil
+		case pb.RawFieldType_NUMBER:
+			return values[0].GetNumberDouble(), values[1:], nil
+		case pb.RawFieldType_BOOL:
+			return values[0].GetBool(), values[1:], nil
 		default:
-			return nil, nil
+			panic("ERROR")
 		}
+	case *pb.Field_Obj:
+		return i.unpackObj(field, values)
+	case *pb.Field_Arr:
+		return i.unpackArr(field, values)
+	default:
+		panic("ERROR")
 	}
-	if item.IsArr {
-		return i.unpackArr(item.Items)
-	}
-	template, err := i.getTemplate(item.TemplateHash)
-	if err != nil {
-		return nil, err
-	}
-	if len(template.Values) != len(item.Items) {
-		return nil, ErrLengthNotMatch
-	}
-	return i.unpackObj(template, item.Items)
 }
 
-func (i *impl) unpackObj(template *pb.Template, items []*pb.Item) (map[string]any, error) {
+func (i *impl) unpackObj(field *pb.Field_Obj, values []*pb.Value) (map[string]any, []*pb.Value, error) {
 	// TODO: 这里会导致Object无序
-	res := make(map[string]any, len(items))
-	for index, v := range items {
-		v, err := i.unpack(v)
+	res := make(map[string]any, len(field.Obj.Fields))
+	var err error
+	var v any
+	for index, f := range field.Obj.Fields {
+		v, values, err = i.unpack(f, values)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		res[template.Values[index]] = v
+		res[field.Obj.Keys[index]] = v
 	}
-	return res, nil
+	return res, values, nil
 }
 
-func (i *impl) unpackArr(items []*pb.Item) ([]any, error) {
-	res := make([]any, 0, len(items))
-	for _, v := range items {
-		v, err := i.unpack(v)
+func (i *impl) unpackArr(field *pb.Field_Arr, values []*pb.Value) ([]any, []*pb.Value, error) {
+	res := make([]any, 0, len(field.Arr.Items))
+	var err error
+	var v any
+	for _, f := range field.Arr.Items {
+		v, values, err = i.unpack(f, values)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		res = append(res, v)
 	}
-	return res, nil
+	return res, values, nil
 }

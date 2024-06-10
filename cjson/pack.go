@@ -5,39 +5,62 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"io"
-	"math"
 
 	"github.com/0x587/go-cjson/cjson/pb"
 	"google.golang.org/protobuf/proto"
 )
 
-func (i *impl) MarshalGzip(j []byte) ([]byte, error) {
-	bs, err := i.Marshal(j)
+func (i *impl) MarshalGzip(j []byte) ([]byte, []byte, error) {
+	field, payload, err := i.Marshal(j)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	payloadBuf, err := i.gzip(payload)
+	if err != nil {
+		return nil, nil, err
+	}
+	fieldBuf, err := i.gzip(field)
+	if err != nil {
+		return nil, nil, err
+	}
+	return fieldBuf, payloadBuf, nil
+}
+
+func (i *impl) gzip(v []byte) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	zw := gzip.NewWriter(buf)
-	zw.Write(bs)
+	zw.Write(v)
 	zw.Close()
 	return io.ReadAll(buf)
 }
 
-func (i *impl) Marshal(j []byte) ([]byte, error) {
-	item, err := i.Pack(j)
+func (i *impl) Marshal(j []byte) ([]byte, []byte, error) {
+	field, payload, err := i.Pack(j)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return proto.Marshal(item)
+	fieldBuf, err := proto.Marshal(field)
+	if err != nil {
+		return nil, nil, err
+	}
+	payloadBuf, err := proto.Marshal(payload)
+	if err != nil {
+		return nil, nil, err
+	}
+	return fieldBuf, payloadBuf, nil
 }
 
-func (i *impl) Pack(j []byte) (*pb.Item, error) {
+func (i *impl) Pack(j []byte) (*pb.Field, *pb.Payload, error) {
 	var data any
 	json.Unmarshal(j, &data)
-	return i.pack(data)
+	field, values, err := i.pack(data)
+	if err != nil {
+		return nil, nil, err
+	}
+	return field, &pb.Payload{Values: values}, nil
 }
 
-func (i *impl) pack(v any) (*pb.Item, error) {
+func (i *impl) pack(v any) (*pb.Field, []*pb.Value, error) {
 	switch value := v.(type) {
 	// object
 	case map[string]any:
@@ -47,60 +70,56 @@ func (i *impl) pack(v any) (*pb.Item, error) {
 		return i.packArr(value)
 	// raw value
 	case string:
-		return &pb.Item{
-			RawValue: &pb.RawValue{
-				TestOneof: &pb.RawValue_Str{Str: value}}}, nil
+		return &pb.Field{
+			Field: &pb.Field_Raw{Raw: pb.RawFieldType_STRING}}, []*pb.Value{{Value: &pb.Value_Str{Str: value}}}, nil
 	case bool:
-		return &pb.Item{
-			RawValue: &pb.RawValue{
-				TestOneof: &pb.RawValue_Bool{Bool: value}}}, nil
+		return &pb.Field{
+			Field: &pb.Field_Raw{Raw: pb.RawFieldType_BOOL}}, []*pb.Value{{Value: &pb.Value_Bool{Bool: value}}}, nil
 	case float64:
-		if value == math.Trunc(value) && value > math.MinInt32 && value < math.MaxInt32 {
-			return &pb.Item{
-				RawValue: &pb.RawValue{
-					TestOneof: &pb.RawValue_NumberInt32{NumberInt32: int32(value)}}}, nil
-		}
-		return &pb.Item{
-			RawValue: &pb.RawValue{
-				TestOneof: &pb.RawValue_NumberDouble{NumberDouble: value}}}, nil
+		return &pb.Field{
+			Field: &pb.Field_Raw{Raw: pb.RawFieldType_NUMBER}}, []*pb.Value{{Value: &pb.Value_NumberDouble{NumberDouble: value}}}, nil
 	default:
-		return nil, nil
+		return nil, nil, nil
 	}
 }
 
-func (i *impl) packObj(obj map[string]any) (*pb.Item, error) {
-	template := &pb.Template{}
-	items := make([]*pb.Item, 0, len(obj))
+func (i *impl) packObj(obj map[string]any) (*pb.Field, []*pb.Value, error) {
+	keys := make([]string, 0)
+	fields := make([]*pb.Field, 0)
+	values := make([]*pb.Value, 0)
 	for key, val := range obj {
-		template.Values = append(template.Values, key)
-		item, err := i.pack(val)
+		field, vs, err := i.pack(val)
+		values = append(values, vs...)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, item)
+		keys = append(keys, key)
+		fields = append(fields, field)
 	}
-	hash, err := i.setTemplate(template)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.Item{
-		IsArr:        false,
-		TemplateHash: hash,
-		Items:        items,
-	}, nil
+	return &pb.Field{Field: &pb.Field_Obj{
+		Obj: &pb.ObjectField{
+			Keys:   keys,
+			Fields: fields,
+		},
+	}}, values, nil
 }
 
-func (i *impl) packArr(obj []any) (*pb.Item, error) {
-	items := make([]*pb.Item, 0, len(obj))
+func (i *impl) packArr(obj []any) (*pb.Field, []*pb.Value, error) {
+	items := make([]*pb.Field, 0, len(obj))
+	values := make([]*pb.Value, 0)
 	for _, val := range obj {
-		item, err := i.pack(val)
+		item, vs, err := i.pack(val)
+		values = append(values, vs...)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		items = append(items, item)
 	}
-	return &pb.Item{
-		IsArr: true,
-		Items: items,
-	}, nil
+	return &pb.Field{
+		Field: &pb.Field_Arr{
+			Arr: &pb.ArraryField{
+				Items: items,
+			},
+		},
+	}, values, nil
 }
