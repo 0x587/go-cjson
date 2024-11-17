@@ -21,6 +21,10 @@ type IF interface {
 	Marshal(json []byte) ([]byte, []byte, error)
 	// Unmarshal unpack json from bytes
 	Unmarshal(fields []byte, values []byte) ([]byte, error)
+	// MarshalObj pack obj and marshal to bytes
+	MarshalObj(obj any) (schema []byte, value []byte, err error)
+	// UnmarshalObj unpack obj from bytes
+	UnmarshalObj(schema []byte, value []byte) (any, error)
 	// MarshalGzip marshal and gzip
 	MarshalGzip(json []byte) ([]byte, []byte, error)
 	// UnmarshalGzip unmarshal and gzip

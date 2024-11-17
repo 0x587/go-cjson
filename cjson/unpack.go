@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"io"
 
 	"github.com/0x587/go-cjson/cjson/pb"
@@ -42,6 +43,18 @@ func (i *impl) Unmarshal(fieldBuf []byte, payloadBuf []byte) ([]byte, error) {
 	return i.Unpack(field, payload)
 }
 
+func (i *impl) UnmarshalObj(fieldBuf []byte, payloadBuf []byte) (any, error) {
+	field, payload := &pb.Field{}, &pb.Payload{}
+	if err := proto.Unmarshal(fieldBuf, field); err != nil {
+		return nil, err
+	}
+	if err := proto.Unmarshal(payloadBuf, payload); err != nil {
+		return nil, err
+	}
+	data, _, err := i.unpack(field, payload.GetValues())
+	return data, err
+}
+
 func (i *impl) Unpack(fields *pb.Field, payload *pb.Payload) ([]byte, error) {
 	data, _, err := i.unpack(fields, payload.GetValues())
 	if err != nil {
@@ -65,14 +78,14 @@ func (i *impl) unpack(field *pb.Field, values []*pb.Value) (any, []*pb.Value, er
 		case pb.RawFieldType_BOOL:
 			return values[0].GetBool(), values[1:], nil
 		default:
-			panic("ERROR")
+			return nil, nil, errors.New("unknown raw field type")
 		}
 	case *pb.Field_Obj:
 		return i.unpackObj(field, values)
 	case *pb.Field_Arr:
 		return i.unpackArr(field, values)
 	default:
-		panic("ERROR")
+		return nil, nil, errors.New("unknown field type")
 	}
 }
 

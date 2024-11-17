@@ -50,6 +50,22 @@ func (i *impl) Marshal(j []byte) ([]byte, []byte, error) {
 	return fieldBuf, payloadBuf, nil
 }
 
+func (i *impl) MarshalObj(obj any) ([]byte, []byte, error) {
+	field, values, err := i.pack(obj)
+	if err != nil {
+		return nil, nil, err
+	}
+	fieldBuf, err := proto.Marshal(field)
+	if err != nil {
+		return nil, nil, err
+	}
+	payloadBuf, err := proto.Marshal(&pb.Payload{Values: values})
+	if err != nil {
+		return nil, nil, err
+	}
+	return fieldBuf, payloadBuf, nil
+}
+
 func (i *impl) Pack(j []byte) (*pb.Field, *pb.Payload, error) {
 	var data any
 	json.Unmarshal(j, &data)
